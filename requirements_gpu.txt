@@ -10,3 +10,4 @@ keyboard==0.13.5
 prompt-toolkit==3.0.47
 sqlalchemy==2.0.36
 fastapi==0.115.0
+uvicorn==0.30.6
