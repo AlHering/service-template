@@ -14,20 +14,21 @@ class HandlerService(Service):
     """
     Handler service.
     """
-    def __init__(self, handler_method: Callable, service_parameters: dict | None = None):
+    def __init__(self, service_parameters: dict | None = None):
         """
         Initiates an instance.
-        :param handler_method: Handler method.
         :param service_parameters: Service parameters.
         """
-        service_parameters = {
+        parameters = {
             "name": "HandlerService", 
-            "description": "Transcribes audio data.", 
-            "config": cfg.DEFAULT_TRANSCRIBER, 
+            "description": "Empty handler service.", 
+            "config": {}, 
             "logger": cfg.LOGGER
-        } if service_parameters is None else service_parameters
-        super().__init__(**service_parameters)
-        self.handler_method = handler_method
+        } 
+        if service_parameters is not None:
+            parameters.update(service_parameters)
+        super().__init__(**parameters)
+        self.handler_method = None
 
     @classmethod
     def validate_configuration(cls, process_config: dict) -> Tuple[bool | None, str]:
@@ -37,13 +38,17 @@ class HandlerService(Service):
         :return: True or False and validation report depending on validation success. 
             None and validation report in case of warnings. 
         """
-        return None, "Validation method is not implemented."
+        if "handler_method" in process_config and isinstance(process_config["handler_method"], Callable):
+            return True, "Validation was successful"
+        else:
+            return False, "No 'handler_method' given in config."
     
     def setup(self) -> bool:
         """
         Sets up service.
         :returns: True, if successful else False.
         """
+        self.handler_method = self.config["handler_method"]
         return True
 
     def run(self) -> ServicePackage | Generator[ServicePackage, None, None] | None:

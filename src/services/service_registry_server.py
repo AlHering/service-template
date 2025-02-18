@@ -365,11 +365,10 @@ def run() -> None:
     global APP, INTERFACE
     INTERFACE = ServiceRegistryServer(services=[
         HandlerService(
-            handler_method=lambda fmt, metadata: (get_timestamp_by_format(fmt), {"input_metadata": metadata}), 
             service_parameters={
                 "name": "TimestampService", 
                 "description": "Returns timestamp in requested format.", 
-                "config": {}, 
+                "config": {"handler_method": lambda fmt, metadata: (get_timestamp_by_format(fmt), {"input_metadata": metadata})}, 
                 "logger": cfg.LOGGER
             }
         )
