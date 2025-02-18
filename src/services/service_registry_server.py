@@ -23,6 +23,7 @@ from datetime import datetime as dt
 from uuid import UUID
 from functools import wraps
 from src.utility.time_utility import get_timestamp_by_format
+from src.utility.json_utility import load
 import logging
 from src.services.services import HandlerService
 from src.services.abstractions.service_abstractions import Service, ServicePackage, EndOfStreamPackage
@@ -169,6 +170,12 @@ class ServiceRegistryServer(object):
         self.router.add_api_route(path="/configs/add", endpoint=self.add_config, methods=["POST"])
         self.router.add_api_route(path="/configs/patch", endpoint=self.patch_config, methods=["POST"])
         return self.router
+    
+    def __del__(self) -> None:
+        """
+        Deconstructs instance.
+        """
+        asyncio.run(self.interrupt())
     
     """
     Service interaction
@@ -348,11 +355,23 @@ class ServiceRegistryServer(object):
             results = [self.database.obj_as_dict(entry) for entry in self.database.get_objects_by_filtermasks(object_type="service_config", filtermasks=[FilterMask([["service_type", "==", service]])])]
         return BaseResponse(status="success", results=results)
     
-    def __del__(self) -> None:
+    @interaction_log
+    async def import_configs(self, path: str) -> BaseResponse:
         """
-        Deconstructs instance.
+        Import configs from file.
+        :param path: Target file path, either absolute or relative to mounted config folder.
+        :return: Response.
         """
-        asyncio.run(self.interrupt())
+        if not os.path.exists(path):
+            path = os.path.join(cfg.PATHS.CONFIG_PATH, path)
+            if not os.path.exists(path):
+                return BaseResponse(status="error", results=[f"Path not found."])
+        results = []
+        service_configs = load(path)
+        for service_type in service_configs:
+            for entry in service_configs[service_type]:
+                results.append(await self.add_config(ConfigPayload(service=service_type, config=entry)))
+        return BaseResponse(status="success", results=results)
 
 
 """
