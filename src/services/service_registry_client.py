@@ -6,12 +6,9 @@
 ****************************************************
 """
 from __future__ import annotations
-import numpy as np
-from typing import Generator, Tuple
-from multiprocessing import Queue, Event
+from typing import Generator
 import requests
 from uuid import UUID
-import time
 import json
 from src.configuration import configuration as cfg
 from src.services.abstractions.service_abstractions import ServicePackage
